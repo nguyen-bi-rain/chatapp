@@ -20,10 +20,8 @@ const MultiRoomChat: React.FC = () => {
     joinRoom,
     leaveRoom,
     sendMessage,
-    sendMessageToRoom,
     getRoomMessages,
     getRoomOnlineUsers,
-    getAllMessages
   } = useRealTimeRooms();
 
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);

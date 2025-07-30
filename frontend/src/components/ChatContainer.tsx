@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from './Navbar';
 
 const ChatContainer: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [activeRoom, setActiveRoom] = useState<string>('general');
 
   const handleRoomSelect = (roomName: string) => {

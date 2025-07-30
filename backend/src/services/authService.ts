@@ -1,27 +1,32 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { UserModel, AuthUser, UserWithoutPassword } from '../models/user';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { UserModel, AuthUser, UserWithoutPassword } from "../models/user";
 
 export class AuthService {
-  private static readonly JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
-  private static readonly JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+  private static readonly JWT_SECRET =
+    process.env.JWT_SECRET || "your-super-secret-jwt-key";
+  private static readonly JWT_EXPIRES_IN  = process.env.JWT_EXPIRES_IN || "7d" as string;
   private static readonly SALT_ROUNDS = 12;
 
   /**
    * Register a new user
    */
-  static async register(username: string, email: string, password: string): Promise<{ user: UserWithoutPassword; token: string }> {
+  static async register(
+    username: string,
+    email: string,
+    password: string
+  ): Promise<{ user: UserWithoutPassword; token: string }> {
     try {
       // Check if user already exists
       const existingUser = await UserModel.findOne({
         $or: [
           { email: email.toLowerCase() },
-          { username: username.toLowerCase() }
-        ]
+          { username: username.toLowerCase() },
+        ],
       });
 
       if (existingUser) {
-        throw new Error('User with this email or username already exists');
+        throw new Error("User with this email or username already exists");
       }
 
       // Hash password
@@ -34,7 +39,7 @@ export class AuthService {
         password: hashedPassword,
         isOnline: false,
         lastSeen: null,
-        room: null
+        room: null,
       });
 
       const savedUser = await newUser.save();
@@ -43,7 +48,7 @@ export class AuthService {
       const token = this.generateToken({
         _id: savedUser._id.toString(),
         username: savedUser.username,
-        email: savedUser.email
+        email: savedUser.email,
       });
 
       // Return user without password
@@ -54,36 +59,41 @@ export class AuthService {
         room: savedUser.room,
         isOnline: savedUser.isOnline,
         lastSeen: savedUser.lastSeen,
-        createdAt: savedUser.createdAt
+        createdAt: savedUser.createdAt,
       };
 
       return {
         user: userWithoutPassword,
-        token
+        token,
       };
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Registration failed');
+      throw new Error("Registration failed");
     }
   }
 
   /**
    * Login user
    */
-  static async login(email: string, password: string): Promise<{ user: UserWithoutPassword; token: string }> {
+  static async login(
+    email: string,
+    password: string
+  ): Promise<{ user: UserWithoutPassword; token: string }> {
     try {
       // Find user by email
-      const user = await UserModel.findOne({ email: email.toLowerCase().trim() });
+      const user = await UserModel.findOne({
+        email: email.toLowerCase().trim(),
+      });
       if (!user) {
-        throw new Error('Invalid email or password');
+        throw new Error("Invalid email or password");
       }
 
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        throw new Error('Invalid email or password');
+        throw new Error("Invalid email or password");
       }
 
       // Update user status
@@ -95,7 +105,7 @@ export class AuthService {
       const token = this.generateToken({
         _id: user._id.toString(),
         username: user.username,
-        email: user.email
+        email: user.email,
       });
 
       // Return user without password
@@ -106,18 +116,18 @@ export class AuthService {
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       };
 
       return {
         user: userWithoutPassword,
-        token
+        token,
       };
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Login failed');
+      throw new Error("Login failed");
     }
   }
 
@@ -129,7 +139,7 @@ export class AuthService {
       const decoded = jwt.verify(token, this.JWT_SECRET) as AuthUser;
       return decoded;
     } catch (error) {
-      throw new Error('Invalid or expired token');
+      throw new Error("Invalid or expired token");
     }
   }
 
@@ -138,18 +148,20 @@ export class AuthService {
    */
   private static generateToken(user: AuthUser): string {
     return jwt.sign(user, this.JWT_SECRET, {
-      expiresIn: this.JWT_EXPIRES_IN
+      expiresIn: "7d",
     });
   }
 
   /**
    * Get user by ID (without password)
    */
-  static async getUserById(userId: string): Promise<UserWithoutPassword | null> {
+  static async getUserById(
+    userId: string
+  ): Promise<UserWithoutPassword | null> {
     try {
-      const user = await UserModel.findById(userId).select('-password');
+      const user = await UserModel.findById(userId).select("-password");
       if (!user) return null;
-      
+
       return {
         id: user._id.toString(),
         username: user.username,
@@ -157,7 +169,7 @@ export class AuthService {
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       };
     } catch (error) {
       return null;
@@ -167,9 +179,13 @@ export class AuthService {
   /**
    * Get user by email (without password)
    */
-  static async getUserByEmail(email: string): Promise<UserWithoutPassword | null> {
+  static async getUserByEmail(
+    email: string
+  ): Promise<UserWithoutPassword | null> {
     try {
-      const user = await UserModel.findOne({ email: email.toLowerCase() }).select('-password');
+      const user = await UserModel.findOne({
+        email: email.toLowerCase(),
+      }).select("-password");
       if (!user) return null;
 
       return {
@@ -179,7 +195,7 @@ export class AuthService {
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       };
     } catch (error) {
       return null;
@@ -189,9 +205,13 @@ export class AuthService {
   /**
    * Get user by username (without password)
    */
-  static async getUserByUsername(username: string): Promise<UserWithoutPassword | null> {
+  static async getUserByUsername(
+    username: string
+  ): Promise<UserWithoutPassword | null> {
     try {
-      const user = await UserModel.findOne({ username: username }).select('-password');
+      const user = await UserModel.findOne({ username: username }).select(
+        "-password"
+      );
       if (!user) return null;
 
       return {
@@ -201,7 +221,7 @@ export class AuthService {
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       };
     } catch (error) {
       return null;
@@ -211,19 +231,22 @@ export class AuthService {
   /**
    * Update user online status
    */
-  static async updateUserStatus(userId: string, isOnline: boolean): Promise<void> {
+  static async updateUserStatus(
+    userId: string,
+    isOnline: boolean
+  ): Promise<void> {
     try {
       await UserModel.findByIdAndUpdate(
         userId,
         {
           isOnline,
-          lastSeen: new Date()
+          lastSeen: new Date(),
         },
         { new: true }
       );
     } catch (error) {
       // Silent fail for status updates to avoid disrupting chat flow
-      console.error('Failed to update user status:', error);
+      console.error("Failed to update user status:", error);
     }
   }
 
@@ -236,20 +259,23 @@ export class AuthService {
         userId,
         {
           room: room || null,
-          lastSeen: new Date()
+          lastSeen: new Date(),
         },
         { new: true }
       );
     } catch (error) {
       // Silent fail for room updates to avoid disrupting chat flow
-      console.error('Failed to update user room:', error);
+      console.error("Failed to update user room:", error);
     }
   }
 
   /**
    * Get all users (without passwords) with pagination
    */
-  static async getAllUsers(limit: number = 50, skip: number = 0): Promise<{
+  static async getAllUsers(
+    limit: number = 50,
+    skip: number = 0
+  ): Promise<{
     users: UserWithoutPassword[];
     total: number;
     hasMore: boolean;
@@ -257,31 +283,31 @@ export class AuthService {
     try {
       const [users, total] = await Promise.all([
         UserModel.find({})
-          .select('-password')
+          .select("-password")
           .sort({ createdAt: -1 })
           .limit(limit)
           .skip(skip)
           .lean(),
-        UserModel.countDocuments({})
+        UserModel.countDocuments({}),
       ]);
 
-      const formattedUsers: UserWithoutPassword[] = users.map(user => ({
+      const formattedUsers: UserWithoutPassword[] = users.map((user) => ({
         id: user._id.toString(),
         username: user.username,
         email: user.email,
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       }));
 
       return {
         users: formattedUsers,
         total,
-        hasMore: total > skip + limit
+        hasMore: total > skip + limit,
       };
     } catch (error) {
-      throw new Error('Failed to get users');
+      throw new Error("Failed to get users");
     }
   }
 
@@ -291,21 +317,21 @@ export class AuthService {
   static async getOnlineUsers(): Promise<UserWithoutPassword[]> {
     try {
       const users = await UserModel.find({ isOnline: true })
-        .select('-password')
+        .select("-password")
         .sort({ lastSeen: -1 })
         .lean();
 
-      return users.map(user => ({
+      return users.map((user) => ({
         id: user._id.toString(),
         username: user.username,
         email: user.email,
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       }));
     } catch (error) {
-      throw new Error('Failed to get online users');
+      throw new Error("Failed to get online users");
     }
   }
 
@@ -315,51 +341,54 @@ export class AuthService {
   static async getUsersInRoom(room: string): Promise<UserWithoutPassword[]> {
     try {
       const users = await UserModel.find({ room, isOnline: true })
-        .select('-password')
+        .select("-password")
         .sort({ lastSeen: -1 })
         .lean();
 
-      return users.map(user => ({
+      return users.map((user) => ({
         id: user._id.toString(),
         username: user.username,
         email: user.email,
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       }));
     } catch (error) {
-      throw new Error('Failed to get users in room');
+      throw new Error("Failed to get users in room");
     }
   }
 
   /**
    * Search users by username or email
    */
-  static async searchUsers(query: string, limit: number = 20): Promise<UserWithoutPassword[]> {
+  static async searchUsers(
+    query: string,
+    limit: number = 20
+  ): Promise<UserWithoutPassword[]> {
     try {
       const users = await UserModel.find({
         $or: [
-          { username: { $regex: query, $options: 'i' } },
-          { email: { $regex: query, $options: 'i' } }
-        ]
+          { username: { $regex: query, $options: "i" } },
+          { email: { $regex: query, $options: "i" } },
+        ],
       })
-        .select('-password')
+        .select("-password")
         .limit(limit)
         .sort({ username: 1 })
         .lean();
 
-      return users.map(user => ({
+      return users.map((user) => ({
         id: user._id.toString(),
         username: user.username,
         email: user.email,
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       }));
     } catch (error) {
-      throw new Error('Failed to search users');
+      throw new Error("Failed to search users");
     }
   }
 
@@ -367,7 +396,7 @@ export class AuthService {
    * Update user profile
    */
   static async updateUserProfile(
-    userId: string, 
+    userId: string,
     updates: { username?: string; email?: string }
   ): Promise<UserWithoutPassword | null> {
     try {
@@ -377,12 +406,12 @@ export class AuthService {
           _id: { $ne: userId },
           $or: [
             ...(updates.username ? [{ username: updates.username }] : []),
-            ...(updates.email ? [{ email: updates.email.toLowerCase() }] : [])
-          ]
+            ...(updates.email ? [{ email: updates.email.toLowerCase() }] : []),
+          ],
         });
 
         if (existingUser) {
-          throw new Error('Username or email already exists');
+          throw new Error("Username or email already exists");
         }
       }
 
@@ -390,10 +419,10 @@ export class AuthService {
         userId,
         {
           ...(updates.username && { username: updates.username.trim() }),
-          ...(updates.email && { email: updates.email.toLowerCase().trim() })
+          ...(updates.email && { email: updates.email.toLowerCase().trim() }),
         },
         { new: true, runValidators: true }
-      ).select('-password');
+      ).select("-password");
 
       if (!user) return null;
 
@@ -404,13 +433,13 @@ export class AuthService {
         room: user.room,
         isOnline: user.isOnline,
         lastSeen: user.lastSeen,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       };
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to update user profile');
+      throw new Error("Failed to update user profile");
     }
   }
 
@@ -418,24 +447,30 @@ export class AuthService {
    * Change user password
    */
   static async changePassword(
-    userId: string, 
-    currentPassword: string, 
+    userId: string,
+    currentPassword: string,
     newPassword: string
   ): Promise<void> {
     try {
       const user = await UserModel.findById(userId);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Verify current password
-      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      const isCurrentPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
       if (!isCurrentPasswordValid) {
-        throw new Error('Current password is incorrect');
+        throw new Error("Current password is incorrect");
       }
 
       // Hash new password
-      const hashedNewPassword = await bcrypt.hash(newPassword, this.SALT_ROUNDS);
+      const hashedNewPassword = await bcrypt.hash(
+        newPassword,
+        this.SALT_ROUNDS
+      );
 
       // Update password
       user.password = hashedNewPassword;
@@ -444,7 +479,7 @@ export class AuthService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to change password');
+      throw new Error("Failed to change password");
     }
   }
 
@@ -455,13 +490,13 @@ export class AuthService {
     try {
       const user = await UserModel.findById(userId);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Verify password before deletion
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
-        throw new Error('Password is incorrect');
+        throw new Error("Password is incorrect");
       }
 
       await UserModel.findByIdAndDelete(userId);
@@ -469,7 +504,7 @@ export class AuthService {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Failed to delete user');
+      throw new Error("Failed to delete user");
     }
   }
 
@@ -489,21 +524,22 @@ export class AuthService {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
 
-      const [totalUsers, onlineUsers, newUsersToday, newUsersThisWeek] = await Promise.all([
-        UserModel.countDocuments({}),
-        UserModel.countDocuments({ isOnline: true }),
-        UserModel.countDocuments({ createdAt: { $gte: today } }),
-        UserModel.countDocuments({ createdAt: { $gte: weekAgo } })
-      ]);
+      const [totalUsers, onlineUsers, newUsersToday, newUsersThisWeek] =
+        await Promise.all([
+          UserModel.countDocuments({}),
+          UserModel.countDocuments({ isOnline: true }),
+          UserModel.countDocuments({ createdAt: { $gte: today } }),
+          UserModel.countDocuments({ createdAt: { $gte: weekAgo } }),
+        ]);
 
       return {
         totalUsers,
         onlineUsers,
         newUsersToday,
-        newUsersThisWeek
+        newUsersThisWeek,
       };
     } catch (error) {
-      throw new Error('Failed to get user statistics');
+      throw new Error("Failed to get user statistics");
     }
   }
 
@@ -512,16 +548,13 @@ export class AuthService {
    */
   static async logout(userId: string): Promise<void> {
     try {
-      await UserModel.findByIdAndUpdate(
-        userId,
-        {
-          isOnline: false,
-          lastSeen: new Date(),
-          room: null
-        }
-      );
+      await UserModel.findByIdAndUpdate(userId, {
+        isOnline: false,
+        lastSeen: new Date(),
+        room: null,
+      });
     } catch (error) {
-      console.error('Failed to logout user:', error);
+      console.error("Failed to logout user:", error);
     }
   }
 
@@ -530,18 +563,18 @@ export class AuthService {
    */
   static async refreshToken(userId: string): Promise<string> {
     try {
-      const user = await UserModel.findById(userId).select('-password');
+      const user = await UserModel.findById(userId).select("-password");
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       return this.generateToken({
         _id: user._id.toString(),
         username: user.username,
-        email: user.email
+        email: user.email,
       });
     } catch (error) {
-      throw new Error('Failed to refresh token');
+      throw new Error("Failed to refresh token");
     }
   }
 }

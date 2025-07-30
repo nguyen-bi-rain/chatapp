@@ -52,9 +52,9 @@ router.get("/room/:roomName", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "Room not found" });
     }
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message:
         error instanceof Error ? error.message : "Failed to get messages",
     });
@@ -175,9 +175,9 @@ router.post("/", authenticateToken, async (req, res) => {
       }
     }
 
-    res.status(201).json(message);
+    return res.status(201).json(message);
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message:
         error instanceof Error ? error.message : "Failed to create message",
     });
@@ -215,14 +215,14 @@ router.delete("/:messageId", authenticateToken, async (req, res) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const result = await MessageService.deleteMessage(messageId, userId);
+    const result = await MessageService.deleteMessage(messageId as string, userId);
     if (result) {
-      res.json({ message: "Message deleted successfully" });
+      return res.json({ message: "Message deleted successfully" });
     } else {
-      res.status(404).json({ message: "Message not found or unauthorized" });
+      return res.status(404).json({ message: "Message not found or unauthorized" });
     }
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message:
         error instanceof Error ? error.message : "Failed to delete message",
     });

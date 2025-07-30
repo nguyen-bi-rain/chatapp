@@ -131,9 +131,9 @@ router.get('/:roomName', async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    res.json(room);
+    return res.json(room);
   } catch (error) {
-    res.status(500).json({ 
+    return res.status(500).json({ 
       message: error instanceof Error ? error.message : 'Failed to get room' 
     });
   }
@@ -166,9 +166,9 @@ router.get('/:roomName/participants', async (req, res) => {
       return res.status(404).json({ message: 'Room not found' });
     }
 
-    res.json(participants);
+    return res.json(participants);
   } catch (error) {
-    res.status(500).json({ 
+    return res.status(500).json({ 
       message: error instanceof Error ? error.message : 'Failed to get participants' 
     });
   }
@@ -204,9 +204,9 @@ router.post('/:roomName/join', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Room not found or already joined' });
     }
 
-    res.json({ message: 'Successfully joined the room', room: result });
+    return res.json({ message: 'Successfully joined the room', room: result });
   } catch (error) {
-    res.status(500).json({ 
+    return res.status(500).json({ 
       message: error instanceof Error ? error.message : 'Failed to join room' 
     });
   }

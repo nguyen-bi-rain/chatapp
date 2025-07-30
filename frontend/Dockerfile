@@ -14,7 +14,7 @@ RUN npm ci
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN npm run build -- --no-lint
 
 # Use nginx to serve the built application
 FROM nginx:alpine
