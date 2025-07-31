@@ -13,15 +13,11 @@ RUN npm ci --only=production
 # Copy source code
 COPY . .
 
-# Build TypeScript to JavaScript
-RUN npm run build
-
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodeuser -u 1001
-
-# Change ownership of the app directory
-RUN chown -R nodeuser:nodejs /app
+# Build TypeScript to JavaScript and create non-root user for security
+RUN npm run build && \
+    addgroup -g 1001 -S nodejs && \
+    adduser -S nodeuser -u 1001 && \
+    chown -R nodeuser:nodejs /app
 USER nodeuser
 
 # Expose port
